@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,10 +9,11 @@ namespace Maersk.Sorting.Api
     public class SortJobProcessor : ISortJobProcessor
     {
         private readonly ILogger<SortJobProcessor> _logger;
+        private static readonly List<SortJob> _jobs =  new List<SortJob>();
 
         public SortJobProcessor(ILogger<SortJobProcessor> logger)
         {
-            _logger = logger;
+            _logger = logger;           
         }
 
         public async Task<SortJob> Process(SortJob job)
