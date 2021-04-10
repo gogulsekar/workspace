@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Maersk.Sorting.Api.Common;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -12,13 +13,15 @@ namespace Maersk.Sorting.Api.Services
     {
         private readonly ISortService _sortService;
         private readonly ILogger<WorkerService> _logger;
+        private readonly InMemoryCache _cache;
         private Timer _timer;
         static object lockObj = new object();
 
-        public WorkerService(ISortService sortService, ILogger<WorkerService> logger)
+        public WorkerService(ISortService sortService, ILogger<WorkerService> logger, InMemoryCache cache)
         {
             _sortService = sortService;
             _logger = logger;
+            _cache = cache;
         }
 
         public void Dispose()
@@ -49,20 +52,13 @@ namespace Maersk.Sorting.Api.Services
 
         private void DoWork(object state)
         {
-            List<SortJob> processed = new List<SortJob>();
-            lock (lockObj)
+            foreach (var jobId in _cache.Keys)
             {
-                var jobs = _sortService.Jobs.Where(p => p.Status == SortJobStatus.Pending);
-                foreach (var job in jobs)
+                var job = _cache.GetEntry(jobId);
+                if (job != null && job.Status == SortJobStatus.Pending)
                 {
                     var resultJob = _sortService.Process(job).Result;
-                    processed.Add(resultJob);
-                }
-
-                foreach (var processedJob in processed)
-                {
-                    _logger.LogInformation($"Hosted Service is processing the job - {processedJob.Id}.");
-                    _sortService.UpdateJob(processedJob);
+                    _cache.SetEntry(jobId, resultJob);
                 }
             }
         }

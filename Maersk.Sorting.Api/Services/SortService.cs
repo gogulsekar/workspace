@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Maersk.Sorting.Api.Common;
+using Microsoft.Extensions.Caching.Memory;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,37 +9,30 @@ namespace Maersk.Sorting.Api.Services
 {
     public class SortService : ISortService
     {
-        private static List<SortJob> _jobs = new List<SortJob>();
         private readonly ISortJobProcessor _processor;
+        private readonly InMemoryCache _cache;
 
-        public List<SortJob> Jobs
-        {
-            get
-            {
-                return _jobs;
-            }
-        }
-
-        
-        public SortService(ISortJobProcessor processor)
+        public SortService(ISortJobProcessor processor, InMemoryCache cache)
         {
             _processor = processor;
+            _cache = cache;
         }
 
         public void Enqueue(SortJob job)
         {
-            _jobs.Add(job);
+
+            _cache.SetEntry(job.Id.ToString(), job);
         }
 
         public SortJob? GetJob(Guid jobId)
         {
-            var job = _jobs.Find(p => p.Id.Equals(jobId));
+            var job = _cache.GetEntry(jobId.ToString());
             return job;
         }
 
         public List<SortJob> GetJobs()
         {
-            return _jobs;
+            return _cache.GetEntries();
         }
 
         public async Task<SortJob> Process(SortJob job)
@@ -48,14 +43,7 @@ namespace Maersk.Sorting.Api.Services
 
         public void UpdateJob(SortJob job)
         {
-            var jobsNeedToBeUpdated = _jobs.Find(p => p.Id.Equals(job.Id));
-            if (jobsNeedToBeUpdated == null)
-            {
-                return;
-            }
-
-            var jobToBeUpdated = _jobs.Remove(jobsNeedToBeUpdated);
-            _jobs.Add(job);
+            _cache.SetEntry(job.Id.ToString(), job);
         }
     }
 }

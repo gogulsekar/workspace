@@ -7,7 +7,6 @@ namespace Maersk.Sorting.Api.Services
 {
     public interface ISortService
     {
-        List<SortJob> Jobs { get; }
         void Enqueue(SortJob job);
         SortJob? GetJob(Guid jobId);
         List<SortJob> GetJobs();

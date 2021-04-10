@@ -1,4 +1,5 @@
 
+using Maersk.Sorting.Api.Common;
 using Maersk.Sorting.Api.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -26,6 +27,7 @@ namespace Maersk.Sorting.Api
 
             services.AddSingleton<ISortJobProcessor, SortJobProcessor>();
             services.AddSingleton<ISortService, SortService>();
+            services.AddSingleton<InMemoryCache>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
